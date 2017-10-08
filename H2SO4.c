@@ -13,8 +13,7 @@ void delay(int limit);
 sem_t* hleave;
 sem_t* sleave;
 sem_t* mutex;
-sem_t* count[2];
-
+int count[2];
 
 void* oxygen(void*){
   delay(rand()%5000);
