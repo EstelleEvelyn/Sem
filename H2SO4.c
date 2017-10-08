@@ -15,7 +15,7 @@ sem_t* sleave;
 sem_t* mutex;
 int count[2];
 
-void* oxygen(void*){
+void* oxygen(void* args){
   delay(rand()%5000);
   printf("oxygen produced\n");
   fflush(stdout);
@@ -30,7 +30,7 @@ void* oxygen(void*){
   return(void*) 0;
 }
 
-void* hydrogen(void*) {
+void* hydrogen(void* args) {
   delay(rand()%5000);
   printf("hydrogen produced\n");
   fflush(stdout);
@@ -45,7 +45,7 @@ void* hydrogen(void*) {
   return (void*) 0;
 
 }
-void* sulfur(void*){
+void* sulfur(void* args){
   delay(rand()%5000);
   printf("sulfur produced\n");
   fflush(stdout);
