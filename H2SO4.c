@@ -8,6 +8,7 @@
 #include "H2SO4.h"
 
 int checkSem(sem_t*, char*);
+int dismiss();
 void delay(int limit);
 
 sem_t* hleave;
@@ -22,9 +23,7 @@ void* oxygen(void* args){
 
   count[1]++;
 
-  sem_wait(mutex);
-
-  sem_wait(sleave);
+  sem_wait(oleave);
   printf("oxygen exited\n");
   fflush(stdout);
   return(void*) 0;
@@ -37,11 +36,11 @@ void* hydrogen(void* args) {
 
   count[0]++;
 
-  sem_wait(mutex);
+  sem_wait(hleave);
 
   printf("hydrogen exited\n");
   fflush(stdout);
-  sem_post(hleave);
+  sem_post(sleave);
   return (void*) 0;
 
 }
@@ -56,12 +55,13 @@ void* sulfur(void* args){
     fflush(stdout);
     count[0] = count[0] - 2;
     count[1] = count[1] - 4;
+    sem_post(hleave);
   }
 
-  sem_wait(hleave);
+  sem_wait(sleave);
   printf("sulfur exited\n");
   fflush(stdout);
-  sem_post(sleave);
+  sem_post(oleave);
   return(void*) 0;
 }
 
@@ -78,11 +78,21 @@ void openSems() {
   while (checkSem(sleave, "sleave") == -1) {
     sleave = sem_open("sleave", O_CREAT|O_EXCL, 0466, 0);
   }
+  oleave = sem_open("oleave", O_CREAT|O_EXCL, 0466, 0);
+  while (checkSem(oleave, "oleave") == -1) {
+    oleave = sem_open("oleave", O_CREAT|O_EXCL, 0466, 0);
+  }
 }
 void closeSems() {
   // important to BOTH close the semaphore object AND unlink the semaphore file
   sem_close(mutex);
   sem_unlink("mutex");
+  sem_close(hleave);
+  sem_unlink("hleave");
+  sem_close(sleave);
+  sem_unlink("sleave");
+  sem_close(oleave);
+  sem_unlink("oleave");
 }
 
 void delay( int limit )
