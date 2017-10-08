@@ -50,7 +50,7 @@ void* sulfur(void* args){
   printf("sulfur produced\n");
   fflush(stdout);
 
-  if(count[0] >= 2 && count[1] >= 1 && count[2] >= 4) {
+  if(count[0] >= 2 && count[1] >= 4) {
     sem_post(mutex);
     printf("*** H20 molecule produced ***\n");
     fflush(stdout);
