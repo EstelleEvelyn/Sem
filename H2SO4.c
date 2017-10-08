@@ -13,6 +13,7 @@ void delay(int limit);
 
 sem_t* hleave;
 sem_t* sleave;
+sem_t* oleave;
 sem_t* mutex;
 int count[2];
 
