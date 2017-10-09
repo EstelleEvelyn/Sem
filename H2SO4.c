@@ -15,7 +15,7 @@ sem_t* hleave;
 sem_t* sleave;
 sem_t* oleave;
 sem_t* mutex;
-int count[2];
+int count[3];
 
 void* oxygen(void* args){
   delay(rand()%5000);
@@ -23,6 +23,13 @@ void* oxygen(void* args){
   fflush(stdout);
 
   count[1]++;
+
+  if(count[0] >= 2 && count[1] >= 1 && count[2] >= 4) {
+    sem_post(mutex);
+    count[0] = count[0] - 2;
+    count[1] = count[1] - 1;
+    count[2] = count[2] - 4;
+  }
 
   sem_wait(oleave);
   printf("oxygen exited\n");
@@ -37,6 +44,13 @@ void* hydrogen(void* args) {
 
   count[0]++;
 
+  if(count[0] >= 2 && count[1] >= 1 && count[2] >= 4) {
+    sem_post(mutex);
+    count[0] = count[0] - 2;
+    count[1] = count[1] - 1;
+    count[2] = count[2] - 4;
+  }
+
   sem_wait(hleave);
 
   printf("hydrogen exited\n");
@@ -50,14 +64,20 @@ void* sulfur(void* args){
   printf("sulfur produced\n");
   fflush(stdout);
 
-  if(count[0] >= 2 && count[1] >= 4) {
+  count[1]++;
+
+  if(count[0] >= 2 && count[1] >= 1 && count[2] >= 4) {
     sem_post(mutex);
-    printf("*** H20 molecule produced ***\n");
-    fflush(stdout);
     count[0] = count[0] - 2;
-    count[1] = count[1] - 4;
-    sem_post(hleave);
+    count[1] = count[1] - 1;
+    count[2] = count[2] - 4;
   }
+
+  sem_wait(mutex);
+  printf("*** H20 molecule produced ***\n");
+  fflush(stdout);
+
+  sem_post(hleave);
 
   sem_wait(sleave);
   printf("sulfur exited\n");

@@ -28,6 +28,7 @@ void delay(int);
 // declare hydrogen semaphore as global variable so shared and accessible from both threads
 sem_t* hydro_sem;
 sem_t* molecule_sem;
+sem_t* hleave;
 
 
 void openSems() {
@@ -41,6 +42,10 @@ void openSems() {
   while (checkSem(molecule_sem, "molsmphr") == -1) {
     molecule_sem = sem_open("molsmphr", O_CREAT|O_EXCL, 0466, 0);
   }
+  hleave = sem_open("leavesmphr", O_CREAT|O_EXCL, 0466, 0);
+  while (checkSem(hleave, "leavesmphr") == -1) {
+    hleave = sem_open("leavesmphr", O_CREAT|O_EXCL, 0466, 0);
+  }
 
 }
 
@@ -50,6 +55,8 @@ void closeSems() {
   sem_unlink("hydrosmphr");
   sem_close(molecule_sem);
   sem_unlink("molsmphr");
+  sem_close(hleave);
+  sem_unlink("leavesmphr");
 }
 
 /*
@@ -77,6 +84,8 @@ void* oxygen(void* args) {
   sem_post(molecule_sem);
   printf("*** H20 molecule produced ***\n");
   fflush(stdout);
+
+  sem_wait(hleave);
 
   printf("oxygen exited\n");
   fflush(stdout);
