@@ -131,9 +131,10 @@ int checkSem(sem_t* sema, char* filename) {
 }
 
 int checkCount() {
+  int i;
   if(count[0] >= 2 && count[1] >= 1 && count[2] >= 4) {
     sem_post(mutex);
-    for(int i = 0; i < 3; i++) {
+    for(i = 0; i < 3; i++) {
       sem_post(hleave);
       count[0]--;
     }
