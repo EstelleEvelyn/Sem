@@ -7,8 +7,11 @@
 #include <fcntl.h>
 #include "H2SO4.h"
 
+// used to handle error that occurs when reuse semaphore name that was not previously closed correctly
 int checkSem(sem_t*, char*);
-int dismiss();
+//used to determine whether the atoms necessary for a molecule are present
+int checkCounts();
+// used to "spin" for some amount of time
 void delay(int limit);
 
 sem_t* hleave;
@@ -25,14 +28,22 @@ void* oxygen(void* args){
   printf("oxygen produced\n");
   fflush(stdout);
 
+  //update the number of oxygen threads currently open
   count[2]++;
 
+  //check to see whether a molecule can be produced
   checkCounts();
 
+  //block leaving until sulfur has left
   sem_wait(oleave);
   printf("oxygen exited\n");
   fflush(stdout);
+  //update how many oxygens have left
   oleaveCount++;
+  //when the fourth oxygen leaves, post permission for next molecule to be created.
+  if (oleaveCount % 4 == 0) {
+    sem_post(exited);
+  }
   return(void*) 0;
 }
 
@@ -41,16 +52,20 @@ void* hydrogen(void* args) {
   printf("hydrogen produced\n");
   fflush(stdout);
 
+  //update number of open hydrogen threads
   count[0]++;
 
+  //check to see if molecule can now be produced
   checkCounts();
 
+  //wait until molecule is produced to leave
   sem_wait(hleave);
-
   printf("hydrogen exited\n");
   fflush(stdout);
+  //update how many hydrogens have left
   hleaveCount++;
   if (hleaveCount % 2 == 0) {
+    //the second hydrogen to leave gives sulfur permission to leave
     sem_post(sleave);
   }
   return (void*) 0;
@@ -61,20 +76,28 @@ void* sulfur(void* args){
   printf("sulfur produced\n");
   fflush(stdout);
 
+  //update number of open sulfur threads
   count[1]++;
 
+  //check to see if molecule can now be produced
   checkCounts();
 
+  //wait for molecule semaphore
   sem_wait(molecule);
+  //wait for previous molecule to finish exiting
+  sem_wait(exited);
   printf("*** H20 molecule produced ***\n");
   fflush(stdout);
 
+  //dismiss both hydrogens
   sem_post(hleave);
   sem_post(hleave);
 
+  //wait for hydrogen to return permission to leave
   sem_wait(sleave);
   printf("sulfur exited\n");
   fflush(stdout);
+  //post enough oleaves for all 4 oxygens to leave
   int i;
   for(i = 0; i < 4; i++) {
     sem_post(oleave);
@@ -148,13 +171,17 @@ int checkSem(sem_t* sema, char* filename) {
 }
 
 int checkCounts() {
+  //if there are at least two hydrogens, at least one sulfur, and at least
+  // four oxygens, produce a molecule
   if(count[0] >= 2 && count[1] >= 1 && count[2] >= 4) {
     sem_post(molecule);
+    //these atoms will leave. update count accordingly
     count[0] = count[0] - 2;
     count[1] = count[1] - 1;
     count[2] = count[2] - 4;
   }
-  if(oleaveCount % 4 == 0) {
+  // the first molecule needs permission to post
+  if(oleaveCount == 0) {
     sem_post(exited);
   }
   return 0;
