@@ -99,6 +99,10 @@ void openSems() {
   while (checkSem(oleave, "oleave") == -1) {
     oleave = sem_open("oleave", O_CREAT|O_EXCL, 0466, 0);
   }
+  exited = sem_open("exited", O_CREAT|O_EXCL, 0466, 0);
+  while (checkSem(exited, "exited") == -1) {
+    exited = sem_open("exited", O_CREAT|O_EXCL, 0466, 0);
+  }
 }
 void closeSems() {
   // important to BOTH close the semaphore object AND unlink the semaphore file
@@ -110,6 +114,8 @@ void closeSems() {
   sem_unlink("sleave");
   sem_close(oleave);
   sem_unlink("oleave");
+  sem_close(exited);
+  sem_unlink("exited");
 }
 
 void delay( int limit )
