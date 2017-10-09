@@ -14,9 +14,11 @@ void delay(int limit);
 sem_t* hleave;
 sem_t* sleave;
 sem_t* oleave;
-sem_t* mutex;
+sem_t* molecule;
+sem_t* exited;
 int count[3];
-int leaveCount;
+int hleaveCount;
+int oleaveCount;
 
 void* oxygen(void* args){
   delay(rand()%5000);
@@ -25,16 +27,12 @@ void* oxygen(void* args){
 
   count[2]++;
 
-  if(count[0] >= 2 && count[1] >= 1 && count[2] >= 4) {
-    sem_post(mutex);
-    count[0] = count[0] - 2;
-    count[1] = count[1] - 1;
-    count[2] = count[2] - 4;
-  }
+  checkCounts();
 
   sem_wait(oleave);
   printf("oxygen exited\n");
   fflush(stdout);
+  oleaveCount++;
   return(void*) 0;
 }
 
@@ -45,19 +43,14 @@ void* hydrogen(void* args) {
 
   count[0]++;
 
-  if(count[0] >= 2 && count[1] >= 1 && count[2] >= 4) {
-    sem_post(mutex);
-    count[0] = count[0] - 2;
-    count[1] = count[1] - 1;
-    count[2] = count[2] - 4;
-  }
+  checkCounts();
 
   sem_wait(hleave);
 
   printf("hydrogen exited\n");
   fflush(stdout);
-  leaveCount++;
-  if (leaveCount % 2 == 0) {
+  hleaveCount++;
+  if (hleaveCount % 2 == 0) {
     sem_post(sleave);
   }
   return (void*) 0;
@@ -70,14 +63,9 @@ void* sulfur(void* args){
 
   count[1]++;
 
-  if(count[0] >= 2 && count[1] >= 1 && count[2] >= 4) {
-    sem_post(mutex);
-    count[0] = count[0] - 2;
-    count[1] = count[1] - 1;
-    count[2] = count[2] - 4;
-  }
+  checkCounts();
 
-  sem_wait(mutex);
+  sem_wait(molecule);
   printf("*** H20 molecule produced ***\n");
   fflush(stdout);
 
@@ -95,9 +83,9 @@ void* sulfur(void* args){
 }
 
 void openSems() {
-  mutex = sem_open("mutex", O_CREAT|O_EXCL, 0466, 0);
-  while (checkSem(mutex, "mutex") == -1) {
-    mutex = sem_open("mutex", O_CREAT|O_EXCL, 0466, 0);
+  molecule = sem_open("molecule", O_CREAT|O_EXCL, 0466, 0);
+  while (checkSem(molecule, "molecule") == -1) {
+    molecule = sem_open("molecule", O_CREAT|O_EXCL, 0466, 0);
   }
   hleave = sem_open("hleave", O_CREAT|O_EXCL, 0466, 0);
   while (checkSem(hleave, "hleave") == -1) {
@@ -114,8 +102,8 @@ void openSems() {
 }
 void closeSems() {
   // important to BOTH close the semaphore object AND unlink the semaphore file
-  sem_close(mutex);
-  sem_unlink("mutex");
+  sem_close(molecule);
+  sem_unlink("molecule");
   sem_close(hleave);
   sem_unlink("hleave");
   sem_close(sleave);
@@ -149,6 +137,19 @@ int checkSem(sem_t* sema, char* filename) {
       fflush(stdout);
       exit(1);
     }
+  }
+  return 0;
+}
+
+int checkCounts() {
+  if(count[0] >= 2 && count[1] >= 1 && count[2] >= 4 && exiting == 0) {
+    sem_post(molecule);
+    count[0] = count[0] - 2;
+    count[1] = count[1] - 1;
+    count[2] = count[2] - 4;
+  }
+  if(oleaveCount % 4 == 0) {
+    sem_post(exited);
   }
   return 0;
 }
