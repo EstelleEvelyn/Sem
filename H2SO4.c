@@ -142,7 +142,7 @@ int checkSem(sem_t* sema, char* filename) {
 }
 
 int checkCounts() {
-  if(count[0] >= 2 && count[1] >= 1 && count[2] >= 4 && exiting == 0) {
+  if(count[0] >= 2 && count[1] >= 1 && count[2] >= 4) {
     sem_post(molecule);
     count[0] = count[0] - 2;
     count[1] = count[1] - 1;
