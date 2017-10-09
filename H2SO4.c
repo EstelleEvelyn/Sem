@@ -8,7 +8,7 @@
 #include "H2SO4.h"
 
 int checkSem(sem_t*, char*);
-int dismiss();
+int checkCount();
 void delay(int limit);
 
 sem_t* hleave;
@@ -24,12 +24,7 @@ void* oxygen(void* args){
 
   count[2]++;
 
-  if(count[0] >= 2 && count[1] >= 1 && count[2] >= 4) {
-    sem_post(mutex);
-    count[0] = count[0] - 2;
-    count[1] = count[1] - 1;
-    count[2] = count[2] - 4;
-  }
+  checkCount();
 
   sem_wait(oleave);
   printf("oxygen exited\n");
@@ -44,12 +39,7 @@ void* hydrogen(void* args) {
 
   count[0]++;
 
-  if(count[0] >= 2 && count[1] >= 1 && count[2] >= 4) {
-    sem_post(mutex);
-    count[0] = count[0] - 2;
-    count[1] = count[1] - 1;
-    count[2] = count[2] - 4;
-  }
+  checkCount();
 
   sem_wait(hleave);
 
@@ -66,12 +56,7 @@ void* sulfur(void* args){
 
   count[1]++;
 
-  if(count[0] >= 2 && count[1] >= 1 && count[2] >= 4) {
-    sem_post(mutex);
-    count[0] = count[0] - 2;
-    count[1] = count[1] - 1;
-    count[2] = count[2] - 4;
-  }
+  checkCount();
 
   sem_wait(mutex);
   printf("*** H20 molecule produced ***\n");
@@ -143,4 +128,20 @@ int checkSem(sem_t* sema, char* filename) {
     }
   }
   return 0;
+}
+
+int checkCount() {
+  if(count[0] >= 2 && count[1] >= 1 && count[2] >= 4) {
+    sem_post(mutex);
+    for(int i = 0; i < 3; i++) {
+      sem_post(hleave);
+      count[0]--;
+    }
+    count[1]--;
+    sem_post(sleave);
+    for(i = 0; i < 5; i++) {
+      sem_post(oleave);
+      count[2]--;
+    }
+  }
 }
