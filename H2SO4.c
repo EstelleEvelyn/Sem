@@ -1,3 +1,15 @@
+/*
+Estelle Bayer
+CS 332
+
+A program using semaphores (specifically MAC compatible methods sem_open, sem_wait,
+and sem_post) to synchronize hydrogen, sulfur, and oxygen threads. Written for use
+with H2SO4Test.c
+
+Author: Estelle Bayer
+Last modified: 10/9/2017
+*/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <pthread.h>
@@ -14,11 +26,16 @@ int checkCounts();
 // used to "spin" for some amount of time
 void delay(int limit);
 
+//semaphores for allowing threads to leave, allowing a molecule to be created,
+//and tracking the status of the previously formed molecule.
 sem_t* hleave;
 sem_t* sleave;
 sem_t* oleave;
 sem_t* molecule;
 sem_t* exited;
+
+//count all present threads by type, and count how many hydrogens and oxygens have
+//left at a given time
 int count[3];
 int hleaveCount;
 int oleaveCount;
@@ -141,6 +158,7 @@ void closeSems() {
   sem_unlink("exited");
 }
 
+/* next two functions from Sherri's code*/
 void delay( int limit )
 {
   int j, k;
@@ -175,7 +193,7 @@ int checkCounts() {
   // four oxygens, produce a molecule
   if(count[0] >= 2 && count[1] >= 1 && count[2] >= 4) {
     sem_post(molecule);
-    //these atoms will leave. update count accordingly
+    //these atoms will leave. update counts accordingly
     count[0] = count[0] - 2;
     count[1] = count[1] - 1;
     count[2] = count[2] - 4;
