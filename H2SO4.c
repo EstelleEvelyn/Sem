@@ -22,7 +22,7 @@ void* oxygen(void* args){
   printf("oxygen produced\n");
   fflush(stdout);
 
-  count[1]++;
+  count[2]++;
 
   if(count[0] >= 2 && count[1] >= 1 && count[2] >= 4) {
     sem_post(mutex);
