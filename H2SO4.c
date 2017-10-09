@@ -88,7 +88,7 @@ void* sulfur(void* args){
   printf("sulfur exited\n");
   fflush(stdout);
   int i;
-  for(i = 0; i < 5; i++) {
+  for(i = 0; i < 4; i++) {
     sem_post(oleave);
   }
   return(void*) 0;
