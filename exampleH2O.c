@@ -82,11 +82,12 @@ void* oxygen(void* args) {
 
   // if here, know 2 hydrogen atoms have been made already so produce a water molecule
   sem_post(molecule_sem);
+  sem_post(molecule_sem);
   printf("*** H20 molecule produced ***\n");
   fflush(stdout);
 
   sem_wait(hleave);
-
+  sem_wait(hleave);
   printf("oxygen exited\n");
   fflush(stdout);
   return (void*) 0;
@@ -113,6 +114,7 @@ void* hydrogen(void* args) {
     printf("error on hydrogen wait for molecule_sem, error # %d\n", errno);
   }
   printf("hydrogen exited\n");
+  sem_post(hleave);
   return (void*) 0;
 }
 
